@@ -1,0 +1,112 @@
+00002018 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 27/01/2025 16:42:59
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00002000                             7      ORG    $2000
+00002000= 64                         8  PLAYER_HEALTH dc.b $64  ; Player Health set to 100% (0x64)
+00002002= 0000                       9  PLAYER_POINTS dc.w $0000 ; Player Points set to 0
+00002004= 0032                      10  PLAYER_X_POS dc.w $0032 ; Player X Position set to 50 (0x32)
+00002006= 0064                      11  PLAYER_Y_POS dc.w $0064 ; Player Y Position set to 100 (0x64)
+00002008= 32                        12  PLAYER_AMMO dc.b $32    ; Player Ammo set to 50 (0x32)
+00002009= 01                        13  PLAYER_SHIELD dc.b $01  ; Player Shield active (1)
+0000200A= 0002                      14  PLAYER_HEALTH_MULT dc.w $0002 ; Player Health Multiplier set to 2x
+0000200C= 00000064                  15  PLAYER_SCORE dc.l $00000064 ; Player Score set to 100 (0x64)
+00002010                            16  
+00002010                            17  ; ---- Boss Data ----
+00002010= C8                        18  BOSS_HEALTH dc.b $C8   ; Boss Health set to 200 (0xC8)
+00002012= 0096                      19  BOSS_X_POS dc.w $0096  ; Boss X Position set to 150 (0x96)
+00002014= 00C8                      20  BOSS_Y_POS dc.w $00C8  ; Boss Y Position set to 200 (0xC8)
+00002016= 03                        21  BOSS_LEVEL dc.b $03    ; Boss Level set to 3 (0x03)
+00002017                            22  
+00002017                            23  START:                  ; first instruction of program
+00002017                            24      ; Set Player Health to 100%
+00002018  41F8 2000                 25      LEA PLAYER_HEALTH, A0     ; Load address of PLAYER_HEALTH into A0
+0000201C  10BC 0064                 26      MOVE.B #$64, (A0)         ; Set Player Health to 100% (0x64)
+00002020                            27  
+00002020                            28      ; Set Player Points to 256
+00002020  43F8 2002                 29      LEA PLAYER_POINTS, A1     ; Load address of PLAYER_POINTS into A1
+00002024  32BC 0100                 30      MOVE.W #$0100, (A1)       ; Set Player Points to 256 (0x0100)
+00002028                            31  
+00002028                            32      ; Set Player X Position to 50
+00002028  45F8 2004                 33      LEA PLAYER_X_POS, A2      ; Load address of PLAYER_X_POS into A2
+0000202C  34BC 0032                 34      MOVE.W #$0032, (A2)       ; Set Player X Position to 50 (0x32)
+00002030                            35  
+00002030                            36      ; Set Player Y Position to 100
+00002030  47F8 2006                 37      LEA PLAYER_Y_POS, A3      ; Load address of PLAYER_Y_POS into A3
+00002034  36BC 0064                 38      MOVE.W #$0064, (A3)       ; Set Player Y Position to 100 (0x64)
+00002038                            39  
+00002038                            40      ; Set Player Ammo to 40
+00002038  49F8 2008                 41      LEA PLAYER_AMMO, A4       ; Load address of PLAYER_AMMO into A4
+0000203C  18BC 0028                 42      MOVE.B #$28, (A4)         ; Set Player Ammo to 40 (0x28)
+00002040                            43  
+00002040                            44      ; Set Player Shield to inactive (0)
+00002040  4BF8 2009                 45      LEA PLAYER_SHIELD, A5     ; Load address of PLAYER_SHIELD into A5
+00002044  1ABC 0000                 46      MOVE.B #$00, (A5)         ; Set Player Shield to inactive (0)
+00002048                            47  
+00002048                            48      ; Set Player Health Multiplier to 3x
+00002048  4DF8 200A                 49      LEA PLAYER_HEALTH_MULT, A6    ; Load address of PLAYER_HEALTH_MULT into A6
+0000204C  3CBC 0003                 50      MOVE.W #$0003, (A6)           ; Set Player Health Multiplier to 3x
+00002050                            51  
+00002050                            52      ; Set Player Score to 256
+00002050  4FF8 200C                 53      LEA PLAYER_SCORE, A7       ; Load address of PLAYER_SCORE into A7
+00002054  2EBC 00000100             54      MOVE.L #$00000100, (A7)    ; Set Player Score to 256 (0x0100)
+0000205A                            55  
+0000205A                            56      ; Set Boss Health to 150
+Line 57 ERROR: Invalid addressing mode
+0000205A                            57      LEA BOSS_HEALTH, A8       ; Load address of BOSS_HEALTH into A8
+Line 58 ERROR: Undefined symbol
+0000205A  13FC 0096 005455D4        58      MOVE.B #$96, (A8)         ; Set Boss Health to 150 (0x96)
+00002062                            59  
+00002062                            60      ; Set Boss X Position to 160
+Line 61 ERROR: Invalid addressing mode
+00002062                            61      LEA BOSS_X_POS, A9        ; Load address of BOSS_X_POS into A9
+Line 62 ERROR: Undefined symbol
+00002062  33FC 00A0 005455D8        62      MOVE.W #$00A0, (A9)       ; Set Boss X Position to 160 (0xA0)
+0000206A                            63  
+0000206A                            64      ; Set Boss Y Position to 224
+Line 65 ERROR: Invalid addressing mode
+0000206A                            65      LEA BOSS_Y_POS, A10       ; Load address of BOSS_Y_POS into A10
+Line 66 ERROR: Undefined symbol
+0000206A  33FC 00E0 005455D8        66      MOVE.W #$00E0, (A10)      ; Set Boss Y Position to 224 (0xE0)
+00002072                            67  
+00002072                            68      ; Set Boss Level to 4
+Line 69 ERROR: Invalid addressing mode
+00002072                            69      LEA BOSS_LEVEL, A11       ; Load address of BOSS_LEVEL into A11
+Line 70 ERROR: Undefined symbol
+00002072  13FC 0004 005455D4        70      MOVE.B #$04, (A11)        ; Set Boss Level to 4 (0x04)
+0000207A                            71  
+0000207A                            72  
+0000207A                            73  
+0000207A                            74  
+0000207A  FFFF FFFF                 75      SIMHALT             ; halt simulator
+0000207E                            76  * Put variables and constants herel)
+0000207E                            77  
+Line 78 WARNING: Origin value is odd (Location counter set to next highest address)
+0000207E                            78      END    START        ; last line of source
+
+8 errors detected
+1 warning generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BOSS_HEALTH         2010
+BOSS_LEVEL          2016
+BOSS_X_POS          2012
+BOSS_Y_POS          2014
+PLAYER_AMMO         2008
+PLAYER_HEALTH       2000
+PLAYER_HEALTH_MULT  200A
+PLAYER_POINTS       2002
+PLAYER_SCORE        200C
+PLAYER_SHIELD       2009
+PLAYER_X_POS        2004
+PLAYER_Y_POS        2006
+START               2017

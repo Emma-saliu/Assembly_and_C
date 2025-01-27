@@ -1,0 +1,31 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 27/01/2025 16:15:37
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000                             9  
+00001000  47F9 0000100E             10      LEA HEALTH, A3      ; Load the address of 'HEALTH' into address register A3
+00001006  0413 000A                 11      SUB.B   #10, (A3)   ; Subtract 10 (decimal) from the byte at memory location pointed by A3 (the location of 'HEALTH')
+0000100A  FFFF FFFF                 12      SIMHALT             ; halt simulator
+0000100E                            13  
+0000100E= 64                        14  HEALTH dc.b     $64     ; Define a byte with value 100 (decimal) at the label 'HEALTH'
+0000100F                            15  
+0000100F                            16  
+0000100F                            17      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+HEALTH              100E
+START               1000
