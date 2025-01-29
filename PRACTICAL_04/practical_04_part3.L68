@@ -1,0 +1,51 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 29/01/2025 16:13:41
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000  11FC 0064 3000             9      MOVE.B  #100, $3000       ; Initialize memory location $3000 with 100 (initial health)
+00001006  43F8 3000                 10      LEA     $3000, A1         ; Load address of $3000 into A1 (pointer to health value)
+0000100A                            11  
+0000100A  6100 000A                 12      BSR     TAKING_DAMAGE     ; Call subroutine to simulate taking damage
+0000100E                            13  
+0000100E                            14  BACK_IN_THE_GAME:
+0000100E  6100 000C                 15      BSR     HEALTH_PICKUP     ; Call subroutine to simulate picking up health
+00001012  6000 000E                 16      BRA     GAME_END          ; Unconditional branch to end the game
+00001016                            17  
+00001016                            18  TAKING_DAMAGE:
+00001016  0411 0014                 19      SUB.B   #20, (A1)         ; Decrease health by 20
+0000101A  60F2                      20      BRA     BACK_IN_THE_GAME  ; Unconditional branch back to main game flow
+0000101C                            21  
+0000101C                            22  HEALTH_PICKUP:
+0000101C  0611 000A                 23      ADD.B   #10, (A1)         ; Increase health by 10
+00001020  4E75                      24      RTS                      ; Return from subroutine
+00001022                            25  
+00001022                            26  GAME_END:
+00001022  12BC 0000                 27      MOVE.B  #$00, (A1)        ; Set health to 0 (end state)
+00001026  FFFF FFFF                 28      SIMHALT                  ; Halt simulator for debugging
+0000102A                            29  
+0000102A  FFFF FFFF                 30      SIMHALT             ; halt simulator
+0000102E                            31  
+0000102E                            32  * Put variables and constants here
+0000102E                            33  
+0000102E                            34      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BACK_IN_THE_GAME    100E
+GAME_END            1022
+HEALTH_PICKUP       101C
+START               1000
+TAKING_DAMAGE       1016
