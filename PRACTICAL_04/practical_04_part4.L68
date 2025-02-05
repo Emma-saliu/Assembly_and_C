@@ -1,0 +1,96 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 05/02/2025 15:25:57
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000                             8  START:                  ; first instruction of program
+00001000                             9  
+00001000                            10  ; Data Section
+00001000= 0000                      11  PLAYER_POINTS   DC.W    $0000     ; Player points (initialized to 0)
+00001002= 64                        12  PLAYER_HEALTH   DC.B    $64       ; Player health (100% = $64)
+00001004= 0000                      13  PLAYER_X_POS    DC.W    $0000     ; Player X position (initial position = 0)
+00001006= 0000                      14  PLAYER_Y_POS    DC.W    $0000     ; Player Y position (initial position = 0)
+00001008                            15  
+00001008= 64                        16  BOSS_HEALTH     DC.B    $64       ; Boss health (100% = $64)
+0000100A= 0200                      17  BOSS_X_POS      DC.W    $0200     ; Boss X position
+0000100C= 0100                      18  BOSS_Y_POS      DC.W    $0100     ; Boss Y position
+0000100E                            19  
+00002000                            20          ORG    $2000       
+00002000                            21          ; Initialize data registers
+00002000  1038 1002                 22          MOVE.B  PLAYER_HEALTH, D0   ; Load player's health into D0 (100% health = $64)
+00002004  3238 1004                 23          MOVE.W  PLAYER_X_POS, D1   ; Load player X position into D1 (initial position = 0)
+00002008                            24  
+00002008                            25          ; Perform arithmetic operation: Subtract 10 from player health
+00002008  0400 000A                 26          SUB.B   #$0A, D0           ; Subtract 10 from player's health in D0
+0000200C                            27  
+0000200C                            28          ; Store the result back into the memory (PLAYER_HEALTH)
+0000200C  11C0 1002                 29          MOVE.B  D0, PLAYER_HEALTH  ; Store updated health back into the memory
+00002010                            30  
+00002010                            31          ; Perform another operation: Add 20 points to the player's score
+00002010  0678 0014 1000            32          ADD.W   #$14, PLAYER_POINTS  ; Player points += 20 ($14 in hex = 20 in decimal)
+00002016                            33  
+00002016                            34          ; Logical Operation: Set the least significant bit of the player points
+00002016  0038 0001 1000            35          OR.B    #$01, PLAYER_POINTS  ; Set the least significant bit of PLAYER_POINTS
+0000201C                            36  
+0000201C                            37          ; Check if player health is below 80% (i.e., less than $50)
+0000201C  0C38 0050 1002            38          CMP.B   #$50, PLAYER_HEALTH   ; Compare player health with 80% health ($50)
+00002022  6500 0006                 39          BLO     LOW_HEALTH        ; If less than 80%, branch to LOW_HEALTH
+00002026                            40  
+00002026                            41          ; Normal operation if health is okay
+00002026  6000 000C                 42          BRA     CONTINUE
+0000202A                            43  
+0000202A                            44  LOW_HEALTH:
+0000202A                            45          ; Handle low health scenario
+0000202A                            46          ; For instance, set the player's points to 0 and display a message (optional in debug)
+0000202A  31FC 0000 1000            47          MOVE.W  #$0000, PLAYER_POINTS   ; Set player points to 0 (lose all points)
+00002030  6000 0002                 48          BRA     CONTINUE
+00002034                            49  
+00002034                            50  CONTINUE:
+00002034                            51          ; Code continues, update player position
+00002034  5441                      52          ADD.W   #$02, D1          ; Increment player X position by 2 (move right)
+00002036  31C1 1004                 53          MOVE.W  D1, PLAYER_X_POS  ; Store updated X position back into memory
+0000203A                            54  
+0000203A                            55          ; Boss behavior: Subtract 5 from boss health
+0000203A  5B38 1008                 56          SUB.B   #$05, BOSS_HEALTH  ; Boss health -= 5
+0000203E                            57  
+0000203E                            58          ; Update Boss position: Increment Y position by 3
+0000203E  5678 100C                 59          ADD.W   #$03, BOSS_Y_POS  ; Increment Boss Y position by 3
+00002042  3438 100C                 60          MOVE.W  BOSS_Y_POS, D2    ; Store updated Y position in D2 (for display or further use)
+00002046                            61  
+00002046                            62          ; Branch to a loop (or end of game)
+00002046  6000 0002                 63          BRA     END
+0000204A                            64  
+0000204A                            65  END:
+0000204A                            66          ; End of program - halt or loop forever (you can modify as needed)
+0000204A  60FE                      67          BRA     END               ; Infinite loop to stop execution here (debugging point)
+0000204C                            68          
+0000204C  FFFF FFFF                 69      SIMHALT             ; halt simulator
+00002050                            70  
+00002050                            71  * Put variables and constants here
+00002050                            72  
+00002050                            73      END    START        ; last line of source
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+BOSS_HEALTH         1008
+BOSS_X_POS          100A
+BOSS_Y_POS          100C
+CONTINUE            2034
+END                 204A
+LOW_HEALTH          202A
+PLAYER_HEALTH       1002
+PLAYER_POINTS       1000
+PLAYER_X_POS        1004
+PLAYER_Y_POS        1006
+START               1000
