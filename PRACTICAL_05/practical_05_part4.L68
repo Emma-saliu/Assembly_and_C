@@ -1,0 +1,88 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 10/02/2025 16:36:24
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7      ORG    $1000
+00001000  =0000000A                  8  DAMAGE      EQU 10
+00001000                             9  START:                  ; first instruction of program
+Line 10 ERROR: Undefined symbol
+00001000  45F9 004DBD16             10      LEA     PLAYER_X, A2
+Line 11 ERROR: Undefined symbol
+00001006  47F9 004DBD16             11      LEA     ENEMY_POSITIONS, A3
+0000100C  6000 0002                 12      BRA     GAME_LOOP
+00001010                            13      
+00001010                            14  GAME_LOOP:
+Line 15 ERROR: Undefined symbol
+00001010  6100 AD04                 15      BSR         COUNT_ENEMIES
+00001014  1800                      16      MOVE.B      D0, D4
+00001016                            17      
+Line 18 ERROR: Undefined symbol
+00001016  43F9 004DBD16             18      LEA         MSG_GAMELOOP, A1
+0000101C  6100 0038                 19      BSR         DRAW
+00001020                            20      
+00001020  6100 0004                 21      BSR         UPDATE
+00001024  60EA                      22      BRA         GAME_LOOP
+00001026                            23      
+00001026                            24  UPDATE:
+Line 25 ERROR: Undefined symbol
+00001026  1239 004DBD16             25      MOVE.B      PLAYER_HEALTH, D1
+0000102C                            26      
+Line 27 ERROR: Undefined symbol
+0000102C  43F9 004DBD16             27      LEA         MSG_HEALTH, A1
+00001032  6100 0022                 28      BSR         DRAW
+00001036                            29      
+00001036  103C 0003                 30      MOVE.B      #3,D0
+0000103A  4E4F                      31      TRAP        #15
+0000103C                            32      
+Line 33 ERROR: Undefined symbol
+0000103C  43F9 004DBD16             33      LEA         CRLF, A1
+00001042  6100 0012                 34      BSR         DRAW
+00001046                            35      
+00001046  B27C 0000                 36      CMP         #0, D1
+Line 37 ERROR: Undefined symbol
+0000104A  6F00 ACCA                 37      BLE         GAME_OVER
+0000104E  5292                      38      ADD.L       #1, (A2)
+00001050  6100 000C                 39      BSR         COLLISION
+00001054  4E75                      40      RTS
+00001056                            41      
+00001056                            42  DRAW:
+00001056  103C 000D                 43      MOVE.B      #13, D0
+0000105A  4E4F                      44      TRAP        #15
+0000105C  4E75                      45      RTS
+0000105E                            46      
+0000105E                            47  COLLISION:
+0000105E  1A3C 0001                 48      MOVE.B      #1, D5
+Line 49 ERROR: Undefined symbol
+00001062  47F9 004DBD16             49      LEA         ENEMY_POSITIONS, A3
+00001068                            50      
+00001068                            51  ITERATE:
+Line 52 ERROR: Invalid syntax
+00001068                            52      CMP      
+00001068                            53      
+00001068                            54  
+00001068  FFFF FFFF                 55      SIMHALT             ; halt simulator
+0000106C                            56  
+0000106C                            57  * Put variables and constants here
+0000106C                            58  
+0000106C                            59      END    START        ; last line of source
+
+10 errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+COLLISION           105E
+DAMAGE              A
+DRAW                1056
+GAME_LOOP           1010
+ITERATE             1068
+START               1000
+UPDATE              1026
