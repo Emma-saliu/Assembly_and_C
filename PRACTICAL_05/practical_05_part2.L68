@@ -1,0 +1,60 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 10/02/2025 15:45:31
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :
+00000000                             3  * Written by :
+00000000                             4  * Date       :
+00000000                             5  * Description:
+00000000                             6  *-----------------------------------------------------------
+00001000                             7             ORG    $1000
+00001000                             8  START:  
+00001000  43F9 00001032              9          LEA PLAYER_POSITION, A1    ; Load Player Position Address into A1
+00001006  45F9 00001034             10          LEA ENEMY_POSITION, A2     ; Load Enemy Position Address into A2
+0000100C                            11  
+0000100C  1219                      12          MOVE.B (A1)+, D1           ; Load Player X Position into D1
+0000100E  1411                      13          MOVE.B (A1), D2            ; Load Player Y Position into D2
+00001010                            14          
+00001010  161A                      15          MOVE.B (A2)+, D3           ; Load Enemy X Position into D3
+00001012  1812                      16          MOVE.B (A2), D4            ; Load Enemy Y Position into D4
+00001014                            17  
+00001014                            18  COLLISION_CHECK:
+00001014  B601                      19          CMP.B D1, D3               ; Compare Player X with Enemy X
+00001016  6600 000C                 20          BNE NEXT_MOVE              ; If not equal, move to next
+0000101A                            21          
+0000101A  B802                      22          CMP.B D2, D4               ; Compare Player Y with Enemy Y
+0000101C  6600 0006                 23          BNE NEXT_MOVE              ; If not equal, move to next
+00001020                            24  
+00001020  6000 0008                 25          BRA COLLISION              ; If both X and Y match, jump to COLLISION
+00001024                            26  
+00001024                            27  NEXT_MOVE:
+00001024  5201                      28          ADD.B #1, D1               ; Move Player X (simulate movement)
+00001026  5202                      29          ADD.B #1, D2               ; Move Player Y (simulate movement)
+00001028  60EA                      30          BRA COLLISION_CHECK        ; Loop again
+0000102A                            31  
+0000102A                            32  COLLISION:
+0000102A  6000 0002                 33          BRA GAME_OVER              ; Collision detected, end game
+0000102E                            34  
+0000102E                            35  GAME_OVER:
+0000102E  FFFF FFFF                 36          SIMHALT                    ; Halt simulator
+00001032                            37  
+00001032= 32 32                     38  PLAYER_POSITION: DC.B 50, 50        ; Player starts at (50,50)
+00001034= 37 37                     39  ENEMY_POSITION:  DC.B 55, 55        ; Enemy is at (55,55)
+00001036                            40  
+00001036                            41          END    START
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+COLLISION           102A
+COLLISION_CHECK     1014
+ENEMY_POSITION      1034
+GAME_OVER           102E
+NEXT_MOVE           1024
+PLAYER_POSITION     1032
+START               1000
