@@ -1,6 +1,6 @@
 *-----------------------------------------------------------
 * Title      : Small World Game
-* Written by : Emoshoke Saliu
+* Written by : Emoshoke Saliu C00297032
 * Date       : 23-02-2025
 * Description: A text-based "Small World" game that generates missions
 *              based on player input, manages resources (Energy & Food), and
@@ -377,6 +377,7 @@ FOOD:           DS.W    1       ; Player's Food
 RandomSeed:     DS.W    1       ; Random number seed
 
         END     START         ; End of program, entry point is START
+
 
 
 
