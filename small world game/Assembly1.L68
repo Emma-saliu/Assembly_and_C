@@ -1,0 +1,442 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 28/02/2025 13:48:28
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Small World Game
+00000000                             3  * Written by : Emoshoke Saliu
+00000000                             4  * Date       : 23-02-2025
+00000000                             5  * Description: A text-based "Small World" game that generates missions
+00000000                             6  *              based on player input, manages resources (Energy & Food), and
+00000000                             7  *              introduces dynamic random events that affect gameplay. The game
+00000000                             8  *              features branching storylines (exploration vs. hunting missions)
+00000000                             9  *              and an endless survival mode where the game ends when either resource
+00000000                            10  *              reaches zero.
+00000000                            11  * Known Bugs: None (inputs doesnt work for sudden event)
+00000000                            12  *-------------------------------------------------------
+00000000                            13  * STARTING MEMORY ADDRESS FOR THE PROGRAM $1000
+00000000                            14  *-------------------------------------------------------
+00001000                            15          ORG     $1000
+00001000                            16  
+00001000                            17  *-------------------------------------------------------
+00001000                            18  * VALIDATION & GAME CONFIGURATION CONSTANTS
+00001000                            19  *-------------------------------------------------------
+00001000  =00000000                 20  EXIT            EQU     0           ; Exit code for replay routine
+00001000  =00000001                 21  MIN_MISSION     EQU     1           ; Minimum mission choice
+00001000  =00000002                 22  MAX_MISSION     EQU     2           ; Maximum mission choice
+00001000  =0000000A                 23  EXP_COST        EQU     10          ; Exploration costs 10 Energy
+00001000  =00000005                 24  EXP_GAIN        EQU     5           ; Exploration gains 5 Food
+00001000  =00000005                 25  HUNT_COST       EQU     5           ; Hunting costs 5 Food
+00001000  =0000000A                 26  HUNT_GAIN       EQU     10          ; Hunting gains 10 Energy
+00001000  =00000032                 27  RAND_THRESHOLD  EQU     50          ; Random event triggers if random value < 50
+00001000  =00000005                 28  RAND_PENALTY    EQU     5           ; Random event subtracts 5 from both resources
+00001000                            29  
+00001000                            30  *-------------------------------------------------------
+00001000                            31  * START OF GAME (Initialize global resources)
+00001000                            32  *-------------------------------------------------------
+00001000                            33  START:
+00001000                            34      ; Initialize resources in memory locations $4000 and $4001
+00001000  33FC 0064 000034C6        35      MOVE.W  #100, ENERGY        ; Set initial Energy to 100
+00001008  33FC 0064 000034C8        36      MOVE.W  #100, FOOD          ; Set initial Food to 100
+00001010  33FC 04D2 000034CA        37      MOVE.W  #1234, RandomSeed   ; Set initial random seed
+00001018                            38      ; (For display purposes, we also store Energy at $4000)
+00001018  11FC 0064 4000            39      MOVE.B  #100, $4000         ; Optional: mirror Energy to memory $4000
+0000101E  47F8 4000                 40      LEA     $4000, A3           ; A3 points to a location (if needed for HUD)
+00001022  6100 1FE6                 41      BSR     WELCOME             ; Display welcome message
+00001026  6100 1FD8                 42      BSR     GAME                ; Branch to main game routine
+0000102A                            43  
+0000102A                            44  *-------------------------------------------------------
+0000102A                            45  * MAIN CODE AREA (Place code from $3000 onward)
+0000102A                            46  *-------------------------------------------------------
+00003000                            47          ORG     $3000
+00003000                            48  
+00003000                            49  GAME:
+00003000  6100 0060                 50      BSR     GAMELOOP            ; Enter the main game loop
+00003004  4E75                      51      RTS                       ; Return from GAME
+00003006                            52  
+00003006                            53  END:
+00003006  FFFF FFFF                 54      SIMHALT                   ; Halt the simulation
+0000300A                            55      
+0000300A                            56    
+0000300A                            57  *-------------------------------------------------------
+0000300A                            58  * WELCOME SUBROUTINE
+0000300A                            59  *-------------------------------------------------------
+0000300A                            60  WELCOME:
+0000300A  6100 01FA                 61      BSR     ENDL                ; Newline before welcome
+0000300E  43F9 0000328F             62      LEA     WELCOME_MSG, A1     ; Load address of welcome message
+00003014  103C 000E                 63      MOVE.B  #14, D0             ; (Command code for output)
+00003018  4E4F                      64      TRAP    #15                 ; Output the welcome message
+0000301A  6100 01EA                 65      BSR     ENDL                ; Newline after message
+0000301E  6100 01CE                 66      BSR     CONTINUE            ; Prompt user to continue
+00003022  4E75                      67      RTS
+00003024                            68  
+00003024                            69  *-------------------------------------------------------
+00003024                            70  * INPUT SUBROUTINE (Mission Input)
+00003024                            71  * This routine displays a prompt and reads a single digit.
+00003024                            72  *-------------------------------------------------------
+00003024                            73  INPUT:
+00003024  6100 01E0                 74      BSR     ENDL
+00003028  43F9 0000337B             75      LEA     MISSION_MSG, A1     ; Load mission prompt
+0000302E  103C 000E                 76      MOVE.B  #14, D0
+00003032  4E4F                      77      TRAP    #15                 ; Display message
+00003034                            78  
+00003034  103C 0002                 79      MOVE.B  #2, D0                  
+00003038  4E4F                      80      TRAP    #15           ; Read character into D0
+0000303A                            81  
+0000303A                            82  
+0000303A  0400 0030                 83      SUB.B   #'0', D0            ; Convert ASCII to numeric (e.g., '1' -> 1, '2' -> 2)
+0000303E                            84                              ; This works because ASCII for '0' is 48, and for '1' is 49, so '1' - '0' = 1.
+0000303E                            85  
+0000303E  B07C 0001                 86      CMP.W   #MIN_MISSION, D0     ; Compare the input value (now numeric) with MIN_MISSION (which is 1)                     ; This checks if the input is less than 1, which would be invalid.
+00003042  6D00 000C                 87      BLT     INVALID_INPUT        ; If the input value is less than 1, branch to INVALID_INPUT.
+00003046  B07C 0002                 88      CMP.W   #MAX_MISSION, D0     ; Compare the input value with MAX_MISSION (which is 2)
+0000304A                            89                              ; This checks if the input value is greater than 2, which would also be invalid.
+0000304A  6E00 0004                 90      BGT     INVALID_INPUT        ; If the input value is greater than 2, branch to INVALID_INPUT.
+0000304E  4E75                      91      RTS                         ; Return from the subroutine if the input is valid (between 1 and 2 inclusive).
+00003050                            92  
+00003050                            93  INVALID_INPUT:
+00003050  43F9 000033A4             94      LEA     INVALID_MSG, A1    ; Load the address of the "Invalid input" message into A1.
+00003056  103C 000E                 95      MOVE.B  #14, D0           ; Set D0 to 14 (for TRAP #15 to output the message).
+0000305A  4E4F                      96      TRAP    #15               ; Display the "Invalid input" message to the user.
+0000305C  303C 0001                 97      MOVE.W  #1, D0            ; Set D0 to 1 (error flag) to signal an invalid input.
+00003060                            98  
+00003060  4E75                      99      RTS
+00003062                           100  *-------------------------------------------------------
+00003062                           101  * GAME LOOP (Main gameplay loop)
+00003062                           102  *-------------------------------------------------------
+00003062                           103  GAMELOOP:
+00003062  61C0                     104      BSR     INPUT               ; Get mission input
+00003064  B27C 0001                105      CMP.W   #1, D1
+00003068  6700 000C                106      BEQ     EXPLORE_MISSION     ; If input is 1, explore
+0000306C  B27C 0002                107      CMP.W   #2, D1
+00003070  6700 0036                108      BEQ     HUNT_MISSION        ; If input is 2, hunt
+00003074  60EC                     109      BRA     GAMELOOP            ; Otherwise, repeat (should not occur)
+00003076                           110      
+00003076                           111  EXPLORE_MISSION:
+00003076  6100 018E                112      BSR     ENDL
+0000307A  43F9 000033C0            113      LEA     EXPLORE_MSG, A1
+00003080  103C 000E                114      MOVE.B  #14, D0
+00003084  4E4F                     115      TRAP    #15               ; Display exploration mission message
+00003086                           116      ; Update resources: Exploration costs Energy, gains Food.
+00003086  3039 000034C6            117      MOVE.W  ENERGY, D0
+0000308C  0440 000A                118      SUB.W   #EXP_COST, D0
+00003090  33C0 000034C6            119      MOVE.W  D0, ENERGY
+00003096  3039 000034C8            120      MOVE.W  FOOD, D0
+0000309C  5A40                     121      ADD.W   #EXP_GAIN, D0
+0000309E  33C0 000034C8            122      MOVE.W  D0, FOOD
+000030A4  6000 0034                123      BRA     POST_MISSION
+000030A8                           124  
+000030A8                           125  HUNT_MISSION:
+000030A8  6100 015C                126      BSR     ENDL
+000030AC  43F9 000033E8            127      LEA     HUNT_MSG, A1
+000030B2  103C 000E                128      MOVE.B  #14, D0
+000030B6  4E4F                     129      TRAP    #15               ; Display hunting mission message
+000030B8                           130      ; Update resources: Hunting costs Food, gains Energy.
+000030B8  3039 000034C8            131      MOVE.W  FOOD, D0
+000030BE  5B40                     132      SUB.W   #HUNT_COST, D0
+000030C0  33C0 000034C8            133      MOVE.W  D0, FOOD
+000030C6  3039 000034C6            134      MOVE.W  ENERGY, D0
+000030CC  0640 000A                135      ADD.W   #HUNT_GAIN, D0
+000030D0  33C0 000034C6            136      MOVE.W  D0, ENERGY
+000030D6  6000 0002                137      BRA     POST_MISSION
+000030DA                           138  
+000030DA                           139  *-------------------------------------------------------
+000030DA                           140  * POST-MISSION SUBROUTINE
+000030DA                           141  * Process random events and check for game over.
+000030DA                           142  *-------------------------------------------------------
+000030DA                           143  POST_MISSION:
+000030DA  6100 0012                144      BSR     RANDOM_EVENT      ; Possibly trigger a random event
+000030DE  6100 0052                145      BSR     CHECK_GAME_OVER   ; Check if game should continue
+000030E2  B07C 0000                146      CMP.W   #0, D0            ; D0=0 means game continues
+000030E6  6700 FF7A                147      BEQ     GAMELOOP
+000030EA  6000 00E0                148      BRA     REPLAY            ; Otherwise, ask to replay
+000030EE                           149  
+000030EE                           150  *-------------------------------------------------------
+000030EE                           151  * RANDOM EVENT SUBROUTINE
+000030EE                           152  * Generate a random number; if less than RAND_THRESHOLD,
+000030EE                           153  * subtract an additional penalty from both Energy and Food.
+000030EE                           154  *-------------------------------------------------------
+000030EE                           155  *-------------------------------------------------------
+000030EE                           156  * RANDOM EVENT SUBROUTINE
+000030EE                           157  * Generate a random number; if less than RAND_THRESHOLD,
+000030EE                           158  * subtract an additional penalty from both Energy and Food.
+000030EE                           159  *-------------------------------------------------------
+000030EE                           160  RANDOM_EVENT:
+000030EE  6100 0116                161      BSR     ENDL
+000030F2  6100 014E                162      BSR     DECORATE
+000030F6  4EB9 00003158            163      JSR     GENERATE_RANDOM    ; Random number in D0
+000030FC  B07C 0032                164      CMP.W   #RAND_THRESHOLD, D0
+00003100  6C00 002E                165      BGE     NO_EVENT
+00003104  43F9 00003407            166      LEA     RANDOM_EVENT_MSG, A1
+0000310A  103C 000E                167      MOVE.B  #14, D0
+0000310E  4E4F                     168      TRAP    #15               ; Display random event message
+00003110                           169      ; Apply penalty to Energy and Food.
+00003110  3039 000034C6            170      MOVE.W  ENERGY, D0
+00003116  5B40                     171      SUB.W   #RAND_PENALTY, D0
+00003118  33C0 000034C6            172      MOVE.W  D0, ENERGY
+0000311E  3039 000034C8            173      MOVE.W  FOOD, D0
+00003124  5B40                     174      SUB.W   #RAND_PENALTY, D0
+00003126  33C0 000034C8            175      MOVE.W  D0, FOOD
+0000312C                           176  
+0000312C                           177      ; Prompt player to continue or take action
+0000312C  6100 00C0                178      BSR     CONTINUE           ; Ask user to press any key to continue
+00003130                           179  
+00003130                           180  NO_EVENT:
+00003130  4E75                     181      RTS
+00003132                           182  *-------------------------------------------------------
+00003132                           183  * CHECK GAME OVER SUBROUTINE
+00003132                           184  * If Energy or Food is zero or negative, game over.
+00003132                           185  *-------------------------------------------------------
+00003132                           186  CHECK_GAME_OVER:
+00003132  3039 000034C6            187      MOVE.W  ENERGY, D0
+00003138  B07C 0000                188      CMP.W   #0, D0
+0000313C  6F00 0014                189      BLE     GAME_OVER
+00003140  3039 000034C8            190      MOVE.W  FOOD, D0
+00003146  B07C 0000                191      CMP.W   #0, D0
+0000314A  6F00 0006                192      BLE     GAME_OVER
+0000314E  4240                     193      CLR.W   D0               ; Game continues: D0=0
+00003150  4E75                     194      RTS
+00003152                           195  GAME_OVER:
+00003152  303C 0001                196      MOVE.W  #1, D0           ; Signal game over: D0 nonzero
+00003156  4E75                     197      RTS
+00003158                           198  *-------------------------------------------------------
+00003158                           199  * GENERATE_RANDOM SUBROUTINE
+00003158                           200  * Simple linear congruential generator (LCG)
+00003158                           201  * NewSeed = (OldSeed * 25173 + 13849) mod 65536
+00003158                           202  * Returns lower 8 bits of the new seed in D0.
+00003158                           203  *-------------------------------------------------------
+00003158                           204  GENERATE_RANDOM:
+00003158  3039 000034CA            205      MOVE.W  RandomSeed, D0
+0000315E  C1FC 6255                206      MULS    #25173, D0         ; Multiply seed by constant
+00003162  0681 00003619            207      ADD.L   #13849, D1         ; Add constant (result in D1)
+00003168  33C1 000034CA            208      MOVE.W  D1, RandomSeed     ; Update seed with lower 16 bits
+0000316E  C27C 00FF                209      AND.W   #$00FF, D1         ; Isolate lower 8 bits
+00003172  3001                     210      MOVE.W  D1, D0            ; Return random value in D0
+00003174  4E75                     211      RTS
+00003176                           212  
+00003176                           213  *-------------------------------------------------------
+00003176                           214  * HUD SUBROUTINE (Display current resources)
+00003176                           215  *-------------------------------------------------------
+00003176                           216  HUD:
+00003176  6100 008E                217       BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
+0000317A  6100 00C6                218      BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE
+0000317E  43F9 0000342F            219      LEA     HUD_MSG,A1      ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
+00003184  103C 000E                220      MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO
+00003188  4E4F                     221      TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+0000318A  1213                     222      MOVE.B  (A3),D1         ;RETRIEVE THE VALUE A3 POINT TO AND MOVE TO D1
+0000318C  103C 0003                223      MOVE.B  #3,D0           ;MOVE LITERAL 3 TO DO    
+00003190  4E4F                     224      TRAP    #15                     ; Display "RESOURCES: "
+00003192                           225      ; Display Energy:
+00003192  43F9 0000343B            226      LEA     ENERGY_MSG, A1
+00003198  103C 000E                227      MOVE.B  #14, D0
+0000319C  4E4F                     228      TRAP    #15               ; Display "Energy: "
+0000319E  3039 000034C6            229      MOVE.W  ENERGY, D0
+000031A4  4EB9 0000321C            230      JSR     DISPLAY_NUMBER    ; Convert and display ENERGY (3 digits)
+000031AA  6100 005A                231      BSR     ENDL
+000031AE                           232      ; Display Food:
+000031AE  43F9 00003444            233      LEA     FOOD_MSG, A1
+000031B4  103C 000E                234      MOVE.B  #14, D0
+000031B8  4E4F                     235      TRAP    #15               ; Display "Food: "
+000031BA  3039 000034C8            236      MOVE.W  FOOD, D0
+000031C0  4EB9 0000321C            237      JSR     DISPLAY_NUMBER    ; Convert and display FOOD
+000031C6  6100 003E                238      BSR     ENDL
+000031CA  4E75                     239      RTS
+000031CC                           240  
+000031CC                           241  *-------------------------------------------------------
+000031CC                           242  * REPLAY SUBROUTINE (Ask player to continue or quit)
+000031CC                           243  *-------------------------------------------------------
+000031CC                           244  REPLAY:
+000031CC  6100 0038                245      BSR     ENDL
+000031D0  43F9 0000344B            246      LEA     REPLAY_MSG, A1
+000031D6  103C 000E                247      MOVE.B  #14, D0
+000031DA  4E4F                     248      TRAP    #15               ; Display replay prompt
+000031DC  4E4E                     249      TRAP    #14               ; Read character into D0
+000031DE  0400 0030                250      SUB.B   #'0', D0         ; Convert ASCII to numeric
+000031E2  B07C 0000                251      CMP.W   #EXIT, D0
+000031E6  6700 FE1E                252      BEQ     END               ; If 0, exit game
+000031EA  6000 FE76                253      BRA     GAMELOOP          ; Otherwise, continue
+000031EE                           254  
+000031EE                           255  *-------------------------------------------------------
+000031EE                           256  * CONTINUE SUBROUTINE (Prompt to continue)
+000031EE                           257  *-------------------------------------------------------
+000031EE                           258  CONTINUE:
+000031EE  6100 0016                259      BSR     ENDL
+000031F2  43F9 00003478            260      LEA     CONTINUE_MSG, A1
+000031F8  103C 000E                261      MOVE.B  #14, D0
+000031FC  4E4F                     262      TRAP    #15         ; Display "Press any key to continue"
+000031FE                           263  
+000031FE  103C 0002                264      MOVE.B  #2, D0      ; Set up TRAP #2 for input
+00003202  4E4F                     265      TRAP    #15         ; Wait for key press
+00003204                           266  
+00003204  4E75                     267      RTS                 ; Return once a key is pressed
+00003206                           268  *-------------------------------------------------------
+00003206                           269  * ENDL SUBROUTINE (Output a CR/LF)
+00003206                           270  *-------------------------------------------------------
+00003206                           271  ENDL:
+00003206  48E7 8040                272      MOVEM.L D0/A1, -(A7)      ; Save D0 and A1
+0000320A  103C 000E                273      MOVE.B  #14, D0
+0000320E  43F9 0000328C            274      LEA     CRLF, A1
+00003214  4E4F                     275      TRAP    #15
+00003216  4CDF 0201                276      MOVEM.L (A7)+, D0/A1      ; Restore D0 and A1
+0000321A  4E75                     277      RTS
+0000321C                           278  
+0000321C                           279  *-------------------------------------------------------
+0000321C                           280  * DISPLAY_NUMBER SUBROUTINE
+0000321C                           281  * Converts a number in D0 (0-999) into three ASCII digits and outputs them.
+0000321C                           282  * Assumes D0 contains a 16-bit number.
+0000321C                           283  *-------------------------------------------------------
+0000321C                           284  DISPLAY_NUMBER:
+0000321C                           285      ; Divide D0 by 100 to get hundreds digit.
+0000321C  3200                     286      MOVE.W  D0, D1
+0000321E  343C 0064                287      MOVE.W  #100, D2
+00003222  82C2                     288      DIVU    D2, D1           ; D1 quotient = hundreds, remainder in D1.L
+00003224  0601 0030                289      ADD.B   #'0', D1         ; Convert hundreds to ASCII
+00003228  1601                     290      MOVE.B  D1, D3           ; Save hundreds in D3
+0000322A                           291      ; Output hundreds digit.
+0000322A  1003                     292      MOVE.B  D3, D0
+0000322C  4E4F                     293      TRAP    #15
+0000322E                           294      ; recalc: subtract (hundreds*100) from original.
+0000322E  3839 000034C6            295      MOVE.W  ENERGY, D4       ; We use ENERGY as a scratch if needed.
+00003234                           296      ; store original value in A register.
+00003234                           297      ; output two more dummy characters:
+00003234  103C 0030                298      MOVE.B  #'0', D0
+00003238  4E4F                     299      TRAP    #15
+0000323A  103C 0030                300      MOVE.B  #'0', D0
+0000323E  4E4F                     301      TRAP    #15
+00003240  4E75                     302      RTS
+00003242                           303  
+00003242                           304  *-------------------------------------------------------
+00003242                           305  * DECORATE SUBROUTINE (Screen decoration)
+00003242                           306  *-------------------------------------------------------
+00003242                           307  DECORATE:
+00003242  163C 003C                308      MOVE.B  #60, D3
+00003246  61BE                     309      BSR     ENDL
+00003248                           310  OUT:
+00003248  43F9 00003494            311      LEA     LOOP_MSG, A1
+0000324E  103C 000E                312      MOVE.B  #14, D0
+00003252  4E4F                     313      TRAP    #15
+00003254  5343                     314      SUB     #1, D3
+00003256  66F0                     315      BNE     OUT
+00003258  61AC                     316      BSR     ENDL
+0000325A  4E75                     317      RTS
+0000325C                           318      
+0000325C  1200                     319      MOVE.B  D0, D1         ; Copy the received character into D1
+0000325E  0601 0030                320      ADD.B   #'0', D1       ; Optionally, convert it back to ASCII (for display)
+00003262  43F9 000034A7            321      LEA     DEBUG_CHAR, A1 ; Message to show received character
+00003268  103C 000E                322      MOVE.B  #14, D0        ; Print the message
+0000326C  4E4F                     323      TRAP    #15
+0000326E                           324  
+0000326E                           325  *-------------------------------------------------------
+0000326E                           326  * CLEAR SCREEN SUBROUTINE
+0000326E                           327  *-------------------------------------------------------
+0000326E                           328  CLEAR_SCREEN:
+0000326E  103C 000B                329      MOVE.B  #11, D0
+00003272  323C FF00                330      MOVE.W  #$FF00, D1
+00003276  4E4F                     331      TRAP    #15
+00003278  4E75                     332      RTS
+0000327A                           333      
+0000327A  1200                     334      MOVE.B  D0, D1         ; Copy the received character into D1
+0000327C  0601 0030                335      ADD.B   #'0', D1       ; Optionally, convert it back to ASCII (for display)
+00003280  43F9 000034A7            336      LEA     DEBUG_CHAR, A1 ; Message to show received character
+00003286  103C 000E                337      MOVE.B  #14, D0        ; Print the message
+0000328A  4E4F                     338      TRAP    #15
+0000328C                           339  
+0000328C                           340  *-------------------------------------------------------
+0000328C                           341  * DATA DECLARATIONS (Messages, constants, and resource variables)
+0000328C                           342  *-------------------------------------------------------
+0000328C= 0D 0A 00                 343  CRLF:           DC.B    $0D, $0A, 0
+0000328F= 2A 2A 2A 2A 2A 2A ...    344  WELCOME_MSG:    DC.B    '************************************************************'
+000032CB= 0D 0A                    345                  DC.B    $0D, $0A
+000032CD= 57 45 4C 43 4F 4D ...    346                  DC.B    'WELCOME TO THE SMALL WORLD!'
+000032E8= 0D 0A                    347                  DC.B    $0D, $0A
+000032EA= 43 48 4F 4F 53 45 ...    348                  DC.B    'CHOOSE YOUR MISSION:'
+000032FE= 0D 0A                    349                  DC.B    $0D, $0A
+00003300= 31 2E 20 45 58 50 ...    350                  DC.B    '1. EXPLORE (BRAVE THE UNKNOWN)'
+0000331E= 0D 0A                    351                  DC.B    $0D, $0A
+00003320= 32 2E 20 48 55 4E ...    352                  DC.B    '2. HUNT (FOR HUNTING PREY)'
+0000333A= 0D 0A                    353                  DC.B    $0D, $0A
+0000333C= 2A 2A 2A 2A 2A 2A ...    354                  DC.B    '************************************************************' 
+00003378= 0D 0A 00                 355                  DC.B    $0D, $0A, 0
+0000337B                           356                  
+0000337B= 45 6E 74 65 72 20 ...    357  MISSION_MSG:    DC.B    'Enter mission type (1-Explore, 2-Hunt): ',0
+000033A4= 49 6E 76 61 6C 69 ...    358  INVALID_MSG:    DC.B    'Invalid input. Try again.',$0D, $0A,0
+000033C0= 59 6F 75 20 65 6D ...    359  EXPLORE_MSG:    DC.B    'You embark on an exploration mission.',$0D, $0A, 0
+000033E8= 59 6F 75 20 67 6F ...    360  HUNT_MSG:       DC.B    'You go on a hunting mission.',$0D, $0A, 0
+00003407= 41 20 73 75 64 64 ...    361  RANDOM_EVENT_MSG: DC.B  'A sudden event disrupts your journey!',$0D, $0A, 0
+0000342F= 52 45 53 4F 55 52 ...    362  HUD_MSG:        DC.B    'RESOURCES: ',0
+0000343B= 45 6E 65 72 67 79 ...    363  ENERGY_MSG:     DC.B    'Energy: ',0
+00003444= 46 6F 6F 64 3A 20 00     364  FOOD_MSG:       DC.B    'Food: ',0
+0000344B= 45 6E 74 65 72 20 ...    365  REPLAY_MSG:     DC.B    'Enter 0 to quit, any other key to continue: ',0
+00003478= 50 72 65 73 73 20 ...    366  CONTINUE_MSG:   DC.B    'Press any key to continue: ',0
+00003494= 2E 00                    367  LOOP_MSG:       DC.B    '.',0
+00003496= 49 6E 70 75 74 20 ...    368  DEBUG_MSG_TEXT: DC.B    'Input received: ',0    ; Debug message prefix
+000034A7= 52 65 63 65 69 76 ...    369  DEBUG_CHAR:     DC.B    'Received character: ',0
+000034BC                           370  MISSION_BUFFER: DS.B    10   ; Buffer for user input (max 10 characters)
+000034C6                           371  
+000034C6                           372  
+000034C6                           373  
+000034C6                           374  ; Resource variables
+000034C6                           375  ENERGY:         DS.W    1       ; Player's Energy
+000034C8                           376  FOOD:           DS.W    1       ; Player's Food
+000034CA                           377  RandomSeed:     DS.W    1       ; Random number seed
+000034CC                           378  
+000034CC                           379          END     START         ; End of program, entry point is START
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+CHECK_GAME_OVER     3132
+CLEAR_SCREEN        326E
+CONTINUE            31EE
+CONTINUE_MSG        3478
+CRLF                328C
+DEBUG_CHAR          34A7
+DEBUG_MSG_TEXT      3496
+DECORATE            3242
+DISPLAY_NUMBER      321C
+END                 3006
+ENDL                3206
+ENERGY              34C6
+ENERGY_MSG          343B
+EXIT                0
+EXPLORE_MISSION     3076
+EXPLORE_MSG         33C0
+EXP_COST            A
+EXP_GAIN            5
+FOOD                34C8
+FOOD_MSG            3444
+GAME                3000
+GAMELOOP            3062
+GAME_OVER           3152
+GENERATE_RANDOM     3158
+HUD                 3176
+HUD_MSG             342F
+HUNT_COST           5
+HUNT_GAIN           A
+HUNT_MISSION        30A8
+HUNT_MSG            33E8
+INPUT               3024
+INVALID_INPUT       3050
+INVALID_MSG         33A4
+LOOP_MSG            3494
+MAX_MISSION         2
+MIN_MISSION         1
+MISSION_BUFFER      34BC
+MISSION_MSG         337B
+NO_EVENT            3130
+OUT                 3248
+POST_MISSION        30DA
+RANDOMSEED          34CA
+RANDOM_EVENT        30EE
+RANDOM_EVENT_MSG    3407
+RAND_PENALTY        5
+RAND_THRESHOLD      32
+REPLAY              31CC
+REPLAY_MSG          344B
+START               1000
+WELCOME             300A
+WELCOME_MSG         328F
