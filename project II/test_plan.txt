@@ -1,0 +1,20 @@
+Test Case: TC01
+Inputs: 2, 3 (entered when prompted)
+Expected Output: Final sum is: 5
+
+Test Case: TC02
+Inputs: 1, 4
+Expected Output: Final sum is: 5
+
+Test Case: TC03
+Inputs: 10, 20
+Expected Output: Final sum is: 30
+
+Test Case: TC04
+Inputs: 0, 0
+Expected Output: Final sum is: 0
+
+Test Case: TC05
+Inputs: -1, 5
+Expected Output: Final sum is: 4
+
